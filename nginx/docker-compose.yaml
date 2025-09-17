@@ -1,21 +1,25 @@
-version: '3.8'
+version: "3.8"
 
 services:
-  webserver:
-    container_name: nginx-webserver
-    build:
-      context: .
-      dockerfile: Dockerfile
-    volumes:
-      - ./log/:/var/log/nginx/ # mount host log file ke container nginx
+  nginx:
+    container_name: nginx-reverse-proxy_net
+    image: nginx:latest
     ports:
-      - 80:80
+      - "5432:80"
+    volumes:
+      - ./log/:/var/log/nginx/
+      - ./nginx.conf:/etc/nginx/nginx.conf
+      - ./my.conf:/etc/nginx/conf.d/my.conf
     networks:
-      - shared-network
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
+      - proxy_net
+    restart: always
+    depends_on:
+      - hc_db
+      - risk_db
+      - document_db
+      - finance_db
+      - market_competition_db
 
 networks:
-  shared-network:
+  proxy_net:
     external: true
-    name: docker-setup_shared-network
