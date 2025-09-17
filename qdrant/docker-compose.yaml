@@ -15,7 +15,7 @@ x-qdrant-common: &qdrant-common
     - 6334            # gRPC
     - 6335            # Cluster comm
   volumes:
-    - ./data:/qdrant/storage
+    - /qdrant:/qdrant/storage
     - ./rbac-testing.json:/qdrant/config/rbac.json:ro
   restart: always
 
@@ -28,14 +28,14 @@ services:
       - 6334:6334   # gRPC
       # - 6335:6335   # Cluster comm
     volumes:
-      - ./data/node1:/qdrant/storage
+      - /qdrant/node1:/qdrant/storage
     command: "./qdrant --uri http://qdrant_node1:6335"
 
   qdrant_node2:
     <<: *qdrant-common
     container_name: qdrant_node2
     volumes:
-      - ./data/node2:/qdrant/storage
+      - /qdrant/node2:/qdrant/storage
     depends_on:
       - qdrant_node1
     command: "./qdrant --bootstrap http://qdrant_node1:6335 --uri http://qdrant_node2:6335"
@@ -44,7 +44,7 @@ services:
     <<: *qdrant-common
     container_name: qdrant_node3
     volumes:
-      - ./data/node3:/qdrant/storage
+      - /qdrant/node3:/qdrant/storage
     depends_on:
       - qdrant_node1
     command: "./qdrant --bootstrap http://qdrant_node1:6335 --uri http://qdrant_node3:6335"
@@ -53,7 +53,7 @@ services:
     <<: *qdrant-common
     container_name: qdrant_node4
     volumes:
-      - ./data/node4:/qdrant/storage
+      - /qdrant/node4:/qdrant/storage
     depends_on:
       - qdrant_node1
     command: "./qdrant --bootstrap http://qdrant_node1:6335 --uri http://qdrant_node4:6335"
