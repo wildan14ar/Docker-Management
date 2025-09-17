@@ -16,7 +16,7 @@ x-qdrant-common: &qdrant-common
     - 6335            # Cluster comm
   volumes:
     - /qdrant:/qdrant/storage
-    - ./rbac-testing.json:/qdrant/config/rbac.json:ro
+    - ./rbac.json:/qdrant/config/rbac.json:ro
   restart: always
 
 services:
