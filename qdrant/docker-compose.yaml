@@ -1,0 +1,59 @@
+# https://medium.com/@vardhanam.daga/distributed-deployment-of-qdrant-cluster-with-sharding-replicas-e7923d483ebc
+
+x-qdrant-common: &qdrant-common
+  image: qdrant/qdrant:latest
+  environment:
+    QDRANT__LOG_LEVEL: INFO
+    QDRANT__CLUSTER__ENABLED: "true"
+    QDRANT__CLUSTER__CONSENSUS__KEY: "${QDRANT_CLUSTER_KEY}"
+    QDRANT__SERVICE__JWT_RBAC: "true"
+    QDRANT__SERVICE__API_KEY: "${QDRANT_API_KEY}"
+    # QDRANT__SERVICE__ENABLE_TLS: "true"
+    # QDRANT__TLS__CERT: ./tls/cert.pem
+  expose:
+    - 6333            # REST API
+    - 6334            # gRPC
+    - 6335            # Cluster comm
+  volumes:
+    - ./data:/qdrant/storage
+    - ./rbac-testing.json:/qdrant/config/rbac.json:ro
+  restart: always
+
+services:
+  qdrant_node1:
+    <<: *qdrant-common
+    container_name: qdrant_node1
+    ports:
+      - 6333:6333   # REST API
+      - 6334:6334   # gRPC
+      # - 6335:6335   # Cluster comm
+    volumes:
+      - ./data/node1:/qdrant/storage
+    command: "./qdrant --uri http://qdrant_node1:6335"
+
+  qdrant_node2:
+    <<: *qdrant-common
+    container_name: qdrant_node2
+    volumes:
+      - ./data/node2:/qdrant/storage
+    depends_on:
+      - qdrant_node1
+    command: "./qdrant --bootstrap http://qdrant_node1:6335 --uri http://qdrant_node2:6335"
+
+  qdrant_node3:
+    <<: *qdrant-common
+    container_name: qdrant_node3
+    volumes:
+      - ./data/node3:/qdrant/storage
+    depends_on:
+      - qdrant_node1
+    command: "./qdrant --bootstrap http://qdrant_node1:6335 --uri http://qdrant_node3:6335"
+
+  qdrant_node4:
+    <<: *qdrant-common
+    container_name: qdrant_node4
+    volumes:
+      - ./data/node4:/qdrant/storage
+    depends_on:
+      - qdrant_node1
+    command: "./qdrant --bootstrap http://qdrant_node1:6335 --uri http://qdrant_node4:6335"

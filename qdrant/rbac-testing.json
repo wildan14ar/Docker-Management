@@ -1,0 +1,41 @@
+{
+  "roles": {
+    "superadmin": {
+      "permissions": [
+        { "collection": "*", "operation": "read" },
+        { "collection": "*", "operation": "write" },
+        { "collection": "*", "operation": "delete" },
+        { "collection": "*", "operation": "manage" } 
+      ]
+    },
+    "admin": {
+      "permissions": [
+        { "collection": "*", "operation": "read" },
+        { "collection": "*", "operation": "write" },
+        { "collection": "*", "operation": "delete" }
+      ]
+    },
+    "writer": {
+      "permissions": [
+        { "collection": "*", "operation": "read" },
+        { "collection": "*", "operation": "write" }
+      ]
+    },
+    "reader": {
+      "permissions": [
+        { "collection": "*", "operation": "read" }
+      ]
+    },
+    "analyst": {
+      "permissions": [
+        { "collection": "*", "operation": "read" },
+        { "collection": "*", "operation": "search" }
+      ]
+    },
+    "guest": {
+      "permissions": [
+        { "collection": "public_*", "operation": "read" }
+      ]
+    }
+  }
+}

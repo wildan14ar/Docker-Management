@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  webserver:
+    container_name: nginx-webserver
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ./log/:/var/log/nginx/ # mount host log file ke container nginx
+    ports:
+      - 80:80
+    networks:
+      - shared-network
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+networks:
+  shared-network:
+    external: true
+    name: docker-setup_shared-network
