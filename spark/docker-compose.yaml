@@ -35,4 +35,4 @@ services:
 
 networks:
   airflow-net:
-    driver: bridge
+    external: true
