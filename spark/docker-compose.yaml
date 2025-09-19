@@ -1,3 +1,6 @@
+# https://medium.com/@kayvan.sol2/spark-on-kubernetes-d566158186c6
+# https://github.com/coder2j/pyspark-tutorial
+
 services:
   spark-master:
     container_name: spark-master
@@ -11,7 +14,9 @@ services:
       - SPARK_USER=root
       - PYSPARK_PYTHON=/opt/bitnami/python/bin/python3
     ports:
-      - 8081:8080
+      - 8081:8080 # Spark Master Web UI
+      # - 7077:7077 # Spark Master Port
+      # - 6066:6066 # Spark Master REST Port
 
   spark-worker:
     image: bitnami/spark:latest
@@ -26,3 +31,8 @@ services:
       - SPARK_SSL_ENABLED=no
       - SPARK_USER=root
       - PYSPARK_PYTHON=/opt/bitnami/python/bin/python3
+
+
+networks:
+  airflow-net:
+    driver: bridge

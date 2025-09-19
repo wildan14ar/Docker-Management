@@ -11,52 +11,60 @@ x-postgres-common: &postgres-common
     - dbpool_net
 
 services:
-  hc_db:
+  dev_db:
     <<: *postgres-common
-    container_name: hc_postgres_db
+    container_name: dev_postgres_db
     ports:
       - "5432:5432"
     volumes:
-      - /postgres/hc_data:/var/lib/postgresql/data
+      - /postgres/dev_data:/var/lib/postgresql/data
 
-  risk_db:
-    <<: *postgres-common
-    container_name: risk_postgres_db
-    ports:
-      - "5433:5432"
-    volumes:
-      - /postgres/risk_data:/var/lib/postgresql/data
+#   hc_db:
+#     <<: *postgres-common
+#     container_name: hc_postgres_db
+#     ports:
+#       - "5432:5432"
+#     volumes:
+#       - /postgres/hc_data:/var/lib/postgresql/data
 
-  document_db:
-    <<: *postgres-common
-    container_name: document_postgres_db
-    ports:
-      - "5434:5432"
-    volumes:
-      - /postgres/document_data:/var/lib/postgresql/data
+#   risk_db:
+#     <<: *postgres-common
+#     container_name: risk_postgres_db
+#     ports:
+#       - "5433:5432"
+#     volumes:
+#       - /postgres/risk_data:/var/lib/postgresql/data
 
-  finance_db:
-    <<: *postgres-common
-    container_name: finance_postgres_db
-    ports:
-      - "5435:5432"
-    volumes:
-      - /postgres/finance_data:/var/lib/postgresql/data
+#   document_db:
+#     <<: *postgres-common
+#     container_name: document_postgres_db
+#     ports:
+#       - "5434:5432"
+#     volumes:
+#       - /postgres/document_data:/var/lib/postgresql/data
 
-  market_competition_db:
-    <<: *postgres-common
-    container_name: market_competition_postgres_db
-    ports:
-      - "5436:5432"
-    volumes:
-      - /postgres/market_competition_data:/var/lib/postgresql/data 
+#   finance_db:
+#     <<: *postgres-common
+#     container_name: finance_postgres_db
+#     ports:
+#       - "5435:5432"
+#     volumes:
+#       - /postgres/finance_data:/var/lib/postgresql/data
 
-volumes:
-  hc_data:
-  risk_data:
-  document_data:
-  finance_data:
-  market_competition_data:
+#   market_competition_db:
+#     <<: *postgres-common
+#     container_name: market_competition_postgres_db
+#     ports:
+#       - "5436:5432"
+#     volumes:
+#       - /postgres/market_competition_data:/var/lib/postgresql/data 
+
+# volumes:
+#   hc_data:
+#   risk_data:
+#   document_data:
+#   finance_data:
+#   market_competition_data:
 
 networks:
   dbpool_net:

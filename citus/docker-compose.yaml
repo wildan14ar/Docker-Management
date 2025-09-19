@@ -1,0 +1,300 @@
+version: "3.8"
+
+networks:
+  db_net:
+    driver: bridge
+
+volumes:
+  hc_data:
+  hc_worker1_data:
+  hc_worker2_data:
+  hc_worker1_replica_data:
+  hc_worker2_replica_data:
+
+  risk_data:
+  risk_worker1_data:
+  risk_worker2_data:
+  risk_worker1_replica_data:
+  risk_worker2_replica_data:
+
+  doc_data:
+  doc_worker1_data:
+  doc_worker2_data:
+  doc_worker1_replica_data:
+  doc_worker2_replica_data:
+
+  fin_data:
+  fin_worker1_data:
+  fin_worker2_data:
+  fin_worker1_replica_data:
+  fin_worker2_replica_data:
+
+  market_data:
+  market_worker1_data:
+  market_worker2_data:
+  market_worker1_replica_data:
+  market_worker2_replica_data:
+
+#########################
+# Common Config
+#########################
+x-citus-common: &citus-common
+  image: citusdata/citus:12.1
+  environment:
+    POSTGRES_USER: ${POSTGRES_USER:-postgres}
+    POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+  networks:
+    - db_net
+
+x-replica-common: &replica-common
+  image: bitnami/postgresql-repmgr:15
+  environment:
+    POSTGRES_USER: ${POSTGRES_USER:-postgres}
+    POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+    REPMGR_PRIMARY_USER: repmgr
+    REPMGR_PRIMARY_PASSWORD: repmgrpass
+    REPMGR_PARTNER_NODES: "hc_worker1,hc_worker1_replica,hc_worker2,hc_worker2_replica"
+  networks:
+    - db_net
+
+#########################
+# Proxy Manager (Pgpool)
+#########################
+services:
+  proxy_manager:
+    image: bitnami/pgpool:latest
+    container_name: proxy_manager
+    environment:
+      PGPOOL_BACKEND_NODES: "0:hc_coordinator:5432,1:risk_coordinator:5432,2:doc_coordinator:5432,3:fin_coordinator:5432,4:market_coordinator:5432"
+      PGPOOL_SR_CHECK_PERIOD: 30
+      PGPOOL_ENABLE_LOAD_BALANCING: "yes"
+      PGPOOL_ENABLE_POOL_HBA: "yes"
+      PGPOOL_POSTGRES_USERNAME: postgres
+      PGPOOL_POSTGRES_PASSWORD: postgres
+      PGPOOL_ADMIN_USERNAME: admin
+      PGPOOL_ADMIN_PASSWORD: adminpass
+    ports:
+      - "5432:5432"
+    networks:
+      - db_net
+    depends_on:
+      - hc_coordinator
+      - risk_coordinator
+      - doc_coordinator
+      - fin_coordinator
+      - market_coordinator
+
+#########################
+# HC Service Cluster
+#########################
+  hc_coordinator:
+    <<: *citus-common
+    container_name: hc_coordinator
+    ports:
+      - "5433:5432"
+    volumes:
+      - hc_data:/var/lib/postgresql/data
+
+  hc_worker1:
+    <<: *citus-common
+    container_name: hc_worker1
+    depends_on:
+      - hc_coordinator
+    volumes:
+      - hc_worker1_data:/var/lib/postgresql/data
+
+  hc_worker1_replica:
+    <<: *replica-common
+    container_name: hc_worker1_replica
+    depends_on:
+      - hc_worker1
+    volumes:
+      - hc_worker1_replica_data:/bitnami/postgresql
+
+  hc_worker2:
+    <<: *citus-common
+    container_name: hc_worker2
+    depends_on:
+      - hc_coordinator
+    volumes:
+      - hc_worker2_data:/var/lib/postgresql/data
+
+  hc_worker2_replica:
+    <<: *replica-common
+    container_name: hc_worker2_replica
+    depends_on:
+      - hc_worker2
+    volumes:
+      - hc_worker2_replica_data:/bitnami/postgresql
+
+#########################
+# Risk Service Cluster
+#########################
+  risk_coordinator:
+    <<: *citus-common
+    container_name: risk_coordinator
+    ports:
+      - "5434:5432"
+    volumes:
+      - risk_data:/var/lib/postgresql/data
+
+  risk_worker1:
+    <<: *citus-common
+    container_name: risk_worker1
+    depends_on:
+      - risk_coordinator
+    volumes:
+      - risk_worker1_data:/var/lib/postgresql/data
+
+  risk_worker1_replica:
+    <<: *replica-common
+    container_name: risk_worker1_replica
+    depends_on:
+      - risk_worker1
+    volumes:
+      - risk_worker1_replica_data:/bitnami/postgresql
+
+  risk_worker2:
+    <<: *citus-common
+    container_name: risk_worker2
+    depends_on:
+      - risk_coordinator
+    volumes:
+      - risk_worker2_data:/var/lib/postgresql/data
+
+  risk_worker2_replica:
+    <<: *replica-common
+    container_name: risk_worker2_replica
+    depends_on:
+      - risk_worker2
+    volumes:
+      - risk_worker2_replica_data:/bitnami/postgresql
+
+#########################
+# Document Service Cluster
+#########################
+  doc_coordinator:
+    <<: *citus-common
+    container_name: doc_coordinator
+    ports:
+      - "5435:5432"
+    volumes:
+      - doc_data:/var/lib/postgresql/data
+
+  doc_worker1:
+    <<: *citus-common
+    container_name: doc_worker1
+    depends_on:
+      - doc_coordinator
+    volumes:
+      - doc_worker1_data:/var/lib/postgresql/data
+
+  doc_worker1_replica:
+    <<: *replica-common
+    container_name: doc_worker1_replica
+    depends_on:
+      - doc_worker1
+    volumes:
+      - doc_worker1_replica_data:/bitnami/postgresql
+
+  doc_worker2:
+    <<: *citus-common
+    container_name: doc_worker2
+    depends_on:
+      - doc_coordinator
+    volumes:
+      - doc_worker2_data:/var/lib/postgresql/data
+
+  doc_worker2_replica:
+    <<: *replica-common
+    container_name: doc_worker2_replica
+    depends_on:
+      - doc_worker2
+    volumes:
+      - doc_worker2_replica_data:/bitnami/postgresql
+
+#########################
+# Finance Service Cluster
+#########################
+  fin_coordinator:
+    <<: *citus-common
+    container_name: fin_coordinator
+    ports:
+      - "5436:5432"
+    volumes:
+      - fin_data:/var/lib/postgresql/data
+
+  fin_worker1:
+    <<: *citus-common
+    container_name: fin_worker1
+    depends_on:
+      - fin_coordinator
+    volumes:
+      - fin_worker1_data:/var/lib/postgresql/data
+
+  fin_worker1_replica:
+    <<: *replica-common
+    container_name: fin_worker1_replica
+    depends_on:
+      - fin_worker1
+    volumes:
+      - fin_worker1_replica_data:/bitnami/postgresql
+
+  fin_worker2:
+    <<: *citus-common
+    container_name: fin_worker2
+    depends_on:
+      - fin_coordinator
+    volumes:
+      - fin_worker2_data:/var/lib/postgresql/data
+
+  fin_worker2_replica:
+    <<: *replica-common
+    container_name: fin_worker2_replica
+    depends_on:
+      - fin_worker2
+    volumes:
+      - fin_worker2_replica_data:/bitnami/postgresql
+
+#########################
+# Market Service Cluster
+#########################
+  market_coordinator:
+    <<: *citus-common
+    container_name: market_coordinator
+    ports:
+      - "5437:5432"
+    volumes:
+      - market_data:/var/lib/postgresql/data
+
+  market_worker1:
+    <<: *citus-common
+    container_name: market_worker1
+    depends_on:
+      - market_coordinator
+    volumes:
+      - market_worker1_data:/var/lib/postgresql/data
+
+  market_worker1_replica:
+    <<: *replica-common
+    container_name: market_worker1_replica
+    depends_on:
+      - market_worker1
+    volumes:
+      - market_worker1_replica_data:/bitnami/postgresql
+
+  market_worker2:
+    <<: *citus-common
+    container_name: market_worker2
+    depends_on:
+      - market_coordinator
+    volumes:
+      - market_worker2_data:/var/lib/postgresql/data
+
+  market_worker2_replica:
+    <<: *replica-common
+    container_name: market_worker2_replica
+    depends_on:
+      - market_worker2
+    volumes:
+      - market_worker2_replica_data:/bitnami/postgresql

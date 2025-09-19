@@ -3,15 +3,13 @@
 # Settings and configurations that are common for all containers
 x-minio-common: &minio-common
   image: quay.io/minio/minio:RELEASE.2022-12-12T19-27-27Z
-  command: server --console-address ":9001" http://minio{1...4}/data{1...2}
+  command: server --console-address ":9001" http://minio-node{1...4}/data{1...2}
   expose:
     - "9000"
     - "9001"
   environment:
-    MINIO_ROOT_USER: ${MINIO_ROOT_USER}
-    MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
-  volumes:
-    - /minio:/data
+    MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+    MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
   healthcheck:
     test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
     interval: 30s
@@ -19,33 +17,33 @@ x-minio-common: &minio-common
     retries: 3
 
 services:
-  minio_node1:
+  minio-node1:
     <<: *minio-common
-    hostname: minio_node1
+    hostname: minio-node1
     volumes:
-      - /minio/node1-1:/data/data1
-      - /minio/node1-2:/data/data2
+      - /minio/node1/data1:/data1
+      - /minio/node1/data2:/data2
 
-  minio_node2:
+  minio-node2:
     <<: *minio-common
-    hostname: minio_node2
+    hostname: minio-node2
     volumes:
-      - /minio/node2-1:/data/data1
-      - /minio/node2-2:/data/data2
+      - /minio/node2/data1:/data1
+      - /minio/node2/data2:/data2
 
-  minio_node3:
+  minio-node3:
     <<: *minio-common
-    hostname: minio_node3
+    hostname: minio-node3
     volumes:
-      - /minio/node3-1:/data/data1
-      - /minio/node3-2:/data/data2
+      - /minio/node3/data1:/data1
+      - /minio/node3/data2:/data2
 
-  minio_node4:
+  minio-node4:
     <<: *minio-common
-    hostname: minio_node4
+    hostname: minio-node4
     volumes:
-      - /minio/node4-1:/data/data1
-      - /minio/node4-2:/data/data2
+      - /minio/node4/data1:/data1
+      - /minio/node4/data2:/data2
 
   nginx:
     image: nginx:latest
@@ -56,9 +54,9 @@ services:
       - "9000:9000"
       - "9001:9001"
     depends_on:
-      - minio1
-      - minio2
-      - minio3
-      - minio4
+      - minio-node1
+      - minio-node2
+      - minio-node3
+      - minio-node4
 
 

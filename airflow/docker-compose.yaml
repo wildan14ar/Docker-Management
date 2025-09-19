@@ -84,6 +84,8 @@ x-airflow-common:
       condition: service_healthy
     postgres:
       condition: service_healthy
+  networks:
+    - airflow-spark-net
 
 services:
   postgres:
@@ -333,3 +335,7 @@ services:
 
 volumes:
   postgres-db-volume:
+
+networks:
+  airflow-net:
+    driver: bridge
