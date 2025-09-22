@@ -13,6 +13,10 @@ services:
       - SPARK_SSL_ENABLED=no
       - SPARK_USER=root
       - PYSPARK_PYTHON=/opt/bitnami/python/bin/python3
+    expose:
+      - 8080
+      - 7077
+      - 6066
     ports:
       - 8081:8080 # Spark Master Web UI
       # - 7077:7077 # Spark Master Port
@@ -23,8 +27,8 @@ services:
     environment:
       - SPARK_MODE=worker
       - SPARK_MASTER_URL=spark://spark-master:7077
-      - SPARK_WORKER_MEMORY=2G
-      - SPARK_WORKER_CORES=2
+      - SPARK_WORKER_MEMORY=1G
+      - SPARK_WORKER_CORES=1
       - SPARK_RPC_AUTHENTICATION_ENABLED=no
       - SPARK_RPC_ENCRYPTION_ENABLED=no
       - SPARK_LOCAL_STORAGE_ENCRYPTION_ENABLED=no
@@ -35,4 +39,4 @@ services:
 
 networks:
   airflow-net:
-    external: true
+    driver: bridge
