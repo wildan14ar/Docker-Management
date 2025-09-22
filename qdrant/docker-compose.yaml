@@ -5,9 +5,9 @@ x-qdrant-common: &qdrant-common
   environment:
     QDRANT__LOG_LEVEL: INFO
     QDRANT__CLUSTER__ENABLED: "true"
-    QDRANT__CLUSTER__CONSENSUS__KEY: "${QDRANT_CLUSTER_KEY:-default_cluster_key}"
+    QDRANT__CLUSTER__CONSENSUS__KEY: "${QDRANT_CLUSTER_KEY:-key123}"
     QDRANT__SERVICE__JWT_RBAC: "true"
-    QDRANT__SERVICE__API_KEY: "${QDRANT_API_KEY:-default_api_key}"
+    QDRANT__SERVICE__API_KEY: "${QDRANT_API_KEY:-key123}"
     # QDRANT__SERVICE__ENABLE_TLS: "true"
     # QDRANT__TLS__CERT: ./tls/cert.pem
   expose:

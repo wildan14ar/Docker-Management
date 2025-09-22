@@ -85,7 +85,7 @@ x-airflow-common:
     postgres:
       condition: service_healthy
   networks:
-    - airflow-spark-net
+    - airflow-net
 
 services:
   postgres:
