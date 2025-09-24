@@ -1,17 +1,17 @@
 version: '3.8'
 
-x-citus-coordinator: &citus-coordinator
+x-citus-coor: &citus-coor
   image: citusdata/citus:12.2
   environment:
-    - POSTGRES_USER=postgres
-    - POSTGRES_PASSWORD=postgrespw
+    - POSTGRES_USER=${POSTGRES_USER:-postgres}
+    - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-ppgpass}
   restart: unless-stopped
 
 x-citus-worker: &citus-worker
   image: citusdata/citus:12.2
   environment:
-    - POSTGRES_USER=postgres
-    - POSTGRES_PASSWORD=postgrespw
+    - POSTGRES_USER=${POSTGRES_USER:-postgres}
+    - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-ppgpass}
   restart: unless-stopped
 
 services:
@@ -25,73 +25,68 @@ services:
     ports:
       - "9999:5432"
     environment:
-      - PGPOOL_POSTGRES_USERNAME=postgres
-      - PGPOOL_POSTGRES_PASSWORD=postgrespw
+      - PGPOOL_POSTGRES_USERNAME=${POSTGRES_USER:-postgres}
+      - PGPOOL_POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-ppgpass}
     volumes:
       - ./pgpool/pgpool.conf:/opt/bitnami/pgpool/conf/pgpool.conf
       - ./pgpool/pool_hba.conf:/opt/bitnami/pgpool/conf/pool_hba.conf
     depends_on:
-      - coordinator_hc
-      - coordinator_doc
-      - coordinator_finance
-      - coordinator_risk
-      - coordinator_market
+      - coor_hc
+      - coor_doc
+      - coor_finance
+      - coor_risk
+      - coor_market
 
   # =====================
   # SERVICE 1
   # =====================
-  coordinator_hc:
-    <<: *citus-coordinator
-    container_name: coordinator_hc
+  coor_hc:
+    <<: *citus-coor
+    container_name: coor_hc
     ports:
       - "5431:5432"
     volumes:
       - citus/cor_hc:/var/lib/postgresql/data
       - ./service1/init-scripts:/docker-entrypoint-initdb.d
     depends_on:
-      - worker1a_hc
-      - worker1b_hc
+      - worker1_hc
+      - worker2_hc
 
-  worker1a_hc:
+  worker1_hc:
     <<: *citus-worker
-    container_name: worker1a_hc
+    container_name: worker1_hc
     volumes:
-      - worker1a_hc_data:/var/lib/postgresql/data
+      - worker1_hc_data:/var/lib/postgresql/data
 
-  worker1b_hc:
+  worker2_hc:
     <<: *citus-worker
-    container_name: worker1b_hc
+    container_name: worker2_hc
     volumes:
-      - worker1b_hc_data:/var/lib/postgresql/data
+      - worker2_hc_data:/var/lib/postgresql/data
 
   # =====================
   # SERVICE 2
   # =====================
-  coordinator_svc2:
-    <<: *citus-coordinator
-    container_name: coordinator_svc2
+  coor_doc:
+    <<: *citus-coor
+    container_name: coor_doc
     ports:
       - "5432:5432"
     volumes:
-      - coordinator_svc2_data:/var/lib/postgresql/data
+      - coor_doc_data:/var/lib/postgresql/data
       - ./service2/init-scripts:/docker-entrypoint-initdb.d
     depends_on:
-      - worker1a_svc2
-      - worker1b_svc2
+      - worker1_doc
+      - worker2_doc
 
-  worker1a_svc2:
+  worker1_doc:
     <<: *citus-worker
-    container_name: worker1a_svc2
+    container_name: worker1_doc
     volumes:
-      - worker1a_svc2_data:/var/lib/postgresql/data
+      - worker1_doc_data:/var/lib/postgresql/data
 
-  worker1b_svc2:
+  worker2_doc:
     <<: *citus-worker
-    container_name: worker1b_svc2
+    container_name: worker2_doc
     volumes:
-      - worker1b_svc2_data:/var/lib/postgresql/data
-
-  # =====================
-  # SERVICE 3,4,5
-  # (pola sama dengan service1 & 2)
-  # =====================
+      - worker2_doc_data:/var/lib/postgresql/data
