@@ -1,14 +1,12 @@
-version: '3.8'
-
 x-citus-coor: &citus-coor
-  image: citusdata/citus:12.2
+  image: citusdata/citus:latest
   environment:
     - POSTGRES_USER=${POSTGRES_USER:-postgres}
     - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-ppgpass}
   restart: unless-stopped
 
 x-citus-worker: &citus-worker
-  image: citusdata/citus:12.2
+  image: citusdata/citus:latest
   environment:
     - POSTGRES_USER=${POSTGRES_USER:-postgres}
     - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-ppgpass}
@@ -19,155 +17,94 @@ services:
   # PGPOOL ENTRY POINT
   # =====================
   pgpool:
-    image: bitnami/pgpool:4
+    image: bitnami/pgpool:latest
     container_name: pgpool
     restart: unless-stopped
     ports:
       - "9999:5432"
     environment:
+      - PGPOOL_BACKEND_NODES=0:coor-hc:5432
+      - PGPOOL_SR_CHECK_USER=${POSTGRES_USER:-postgres}
+      - PGPOOL_SR_CHECK_PASSWORD=${POSTGRES_PASSWORD:-ppgpass}
+      - PGPOOL_HEALTH_CHECK_USER=${POSTGRES_USER:-postgres}
+      - PGPOOL_HEALTH_CHECK_PASSWORD=${POSTGRES_PASSWORD:-ppgpass}
+      - PGPOOL_ADMIN_USERNAME=admin
+      - PGPOOL_ADMIN_PASSWORD=adminpass
       - PGPOOL_POSTGRES_USERNAME=${POSTGRES_USER:-postgres}
       - PGPOOL_POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-ppgpass}
+      - PGPOOL_ENABLE_LDAP=no
     volumes:
       - ./pgpool/pgpool.conf:/opt/bitnami/pgpool/conf/pgpool.conf
       - ./pgpool/pool_hba.conf:/opt/bitnami/pgpool/conf/pool_hba.conf
     depends_on:
-      - coor_hc
-      - coor_doc
-      - coor_finance
-      - coor_risk
-      - coor_market
+      - coor-hc
+      - coor-doc
+      # - coor_finance
+      # - coor_risk
+      # - coor_market
 
   # =====================
-  # SERVICE 1
+  # SERVICE HC
   # =====================
-  coor_hc:
+  coor-hc:
     <<: *citus-coor
-    container_name: coor_hc
+    container_name: coor-hc
     ports:
       - "5431:5432"
+    environment:
+      - POSTGRES_DB=hc_db
     volumes:
-      - /citus/hc/cor_data:/var/lib/postgresql/data
+      - coor_hc_data:/var/lib/postgresql/data
       - ./init-sql/init-hc.sql:/docker-entrypoint-initdb.d/init-hc.sql
     depends_on:
-      - worker1_hc
-      - worker2_hc
+      - worker1-hc
+      - worker2-hc
 
-  worker1_hc:
+  worker1-hc:
     <<: *citus-worker
-    container_name: worker1_hc
+    container_name: worker1-hc
     volumes:
-      - /citus/hc/worker1_data:/var/lib/postgresql/data
+      - worker1_hc_data:/var/lib/postgresql/data
 
-  worker2_hc:
+  worker2-hc:
     <<: *citus-worker
-    container_name: worker2_hc
+    container_name: worker2-hc
     volumes:
-      - /citus/hc/worker2_data:/var/lib/postgresql/data
+      - worker2_hc_data:/var/lib/postgresql/data
 
   # =====================
-  # SERVICE 2
+  # SERVICE DOCUMENT
   # =====================
-  coor_doc:
+  coor-doc:
     <<: *citus-coor
-    container_name: coor_doc
+    container_name: coor-doc
     ports:
       - "5432:5432"
+    environment:
+      - POSTGRES_DB=doc_db
     volumes:
-      - /citus/doc/coor_data:/var/lib/postgresql/data
+      - coor_doc_data:/var/lib/postgresql/data
       - ./init-sql/init-doc.sql:/docker-entrypoint-initdb.d/init-doc.sql
     depends_on:
-      - worker1_doc
-      - worker2_doc
+      - worker1-doc
+      - worker2-doc
 
-  worker1_doc:
+  worker1-doc:
     <<: *citus-worker
-    container_name: worker1_doc
+    container_name: worker1-doc
     volumes:
-      - /citus/doc/worker1_data:/var/lib/postgresql/data
+      - worker1_doc_data:/var/lib/postgresql/data
 
-  worker2_doc:
+  worker2-doc:
     <<: *citus-worker
-    container_name: worker2_doc
+    container_name: worker2-doc
     volumes:
-      - /citus/doc/worker2_data:/var/lib/postgresql/data
+      - worker2_doc_data:/var/lib/postgresql/data
 
-  # =====================
-  # SERVICE 3
-  # =====================
-  coor_finance:
-    <<: *citus-coor
-    container_name: coor_finance
-    ports:
-      - "5433:5432"
-    volumes:
-      - /citus/finance/coor_data:/var/lib/postgresql/data
-      - ./init-sql/init-finance.sql:/docker-entrypoint-initdb.d/init-finance.sql
-    depends_on:
-      - worker1_finance
-      - worker2_finance
-      
-  worker1_finance:
-    <<: *citus-worker
-    container_name: worker1_finance
-    volumes:
-      - /citus/finance/worker1_data:/var/lib/postgresql/data
-
-  worker2_finance:
-    <<: *citus-worker
-    container_name: worker2_finance
-    volumes:
-      - /citus/finance/worker2_data:/var/lib/postgresql/data
-
-  # =====================
-  # SERVICE 4
-  # =====================
-  coor_risk:
-    <<: *citus-coor
-    container_name: coor_risk
-    ports:
-      - "5434:5432"
-    volumes:
-      - /citus/risk/coor_data:/var/lib/postgresql/data
-      - ./init-sql/init-risk.sql:/docker-entrypoint-initdb.d/init-risk.sql
-    depends_on:
-      - worker1_risk
-      - worker2_risk
-
-  worker1_risk:
-    <<: *citus-worker
-    container_name: worker1_risk
-    volumes:
-      - /citus/risk/worker1_data:/var/lib/postgresql/data
-
-  worker2_risk:
-    <<: *citus-worker
-    container_name: worker2_risk
-    volumes:
-      - /citus/risk/worker2_data:/var/lib/postgresql/data
-
-  # =====================
-  # SERVICE 5
-  # =====================
-  coor_market:
-    <<: *citus-coor
-    container_name: coor_market
-    ports:
-      - "5435:5432"
-    volumes:
-      - /citus/market/coor_data:/var/lib/postgresql/data
-      - ./init-sql/init-market.sql:/docker-entrypoint-initdb.d/init-market.sql
-    depends_on:
-      - worker1_market
-      - worker2_market
-  
-  worker1_market:
-    <<: *citus-worker
-    container_name: worker1_market
-    volumes:
-      - /citus/market/worker1_data:/var/lib/postgresql/data
-      
-  worker2_market:
-    <<: *citus-worker
-    container_name: worker2_market
-    volumes:
-      - /citus/market/worker2_data:/var/lib/postgresql/data
+volumes:
+  coor_hc_data:
+  worker1_hc_data:
+  worker2_hc_data:
+  coor_doc_data:
+  worker1_doc_data:
+  worker2_doc_data:
