@@ -46,8 +46,8 @@ services:
     ports:
       - "5431:5432"
     volumes:
-      - citus/cor_hc:/var/lib/postgresql/data
-      - ./service1/init-scripts:/docker-entrypoint-initdb.d
+      - /citus/hc/cor_data:/var/lib/postgresql/data
+      - ./init-sql/init-hc.sql:/docker-entrypoint-initdb.d/init-hc.sql
     depends_on:
       - worker1_hc
       - worker2_hc
@@ -56,13 +56,13 @@ services:
     <<: *citus-worker
     container_name: worker1_hc
     volumes:
-      - worker1_hc_data:/var/lib/postgresql/data
+      - /citus/hc/worker1_data:/var/lib/postgresql/data
 
   worker2_hc:
     <<: *citus-worker
     container_name: worker2_hc
     volumes:
-      - worker2_hc_data:/var/lib/postgresql/data
+      - /citus/hc/worker2_data:/var/lib/postgresql/data
 
   # =====================
   # SERVICE 2
@@ -73,8 +73,8 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - coor_doc_data:/var/lib/postgresql/data
-      - ./service2/init-scripts:/docker-entrypoint-initdb.d
+      - /citus/doc/coor_data:/var/lib/postgresql/data
+      - ./init-sql/init-doc.sql:/docker-entrypoint-initdb.d/init-doc.sql
     depends_on:
       - worker1_doc
       - worker2_doc
@@ -83,10 +83,91 @@ services:
     <<: *citus-worker
     container_name: worker1_doc
     volumes:
-      - worker1_doc_data:/var/lib/postgresql/data
+      - /citus/doc/worker1_data:/var/lib/postgresql/data
 
   worker2_doc:
     <<: *citus-worker
     container_name: worker2_doc
     volumes:
-      - worker2_doc_data:/var/lib/postgresql/data
+      - /citus/doc/worker2_data:/var/lib/postgresql/data
+
+  # =====================
+  # SERVICE 3
+  # =====================
+  coor_finance:
+    <<: *citus-coor
+    container_name: coor_finance
+    ports:
+      - "5433:5432"
+    volumes:
+      - /citus/finance/coor_data:/var/lib/postgresql/data
+      - ./init-sql/init-finance.sql:/docker-entrypoint-initdb.d/init-finance.sql
+    depends_on:
+      - worker1_finance
+      - worker2_finance
+      
+  worker1_finance:
+    <<: *citus-worker
+    container_name: worker1_finance
+    volumes:
+      - /citus/finance/worker1_data:/var/lib/postgresql/data
+
+  worker2_finance:
+    <<: *citus-worker
+    container_name: worker2_finance
+    volumes:
+      - /citus/finance/worker2_data:/var/lib/postgresql/data
+
+  # =====================
+  # SERVICE 4
+  # =====================
+  coor_risk:
+    <<: *citus-coor
+    container_name: coor_risk
+    ports:
+      - "5434:5432"
+    volumes:
+      - /citus/risk/coor_data:/var/lib/postgresql/data
+      - ./init-sql/init-risk.sql:/docker-entrypoint-initdb.d/init-risk.sql
+    depends_on:
+      - worker1_risk
+      - worker2_risk
+
+  worker1_risk:
+    <<: *citus-worker
+    container_name: worker1_risk
+    volumes:
+      - /citus/risk/worker1_data:/var/lib/postgresql/data
+
+  worker2_risk:
+    <<: *citus-worker
+    container_name: worker2_risk
+    volumes:
+      - /citus/risk/worker2_data:/var/lib/postgresql/data
+
+  # =====================
+  # SERVICE 5
+  # =====================
+  coor_market:
+    <<: *citus-coor
+    container_name: coor_market
+    ports:
+      - "5435:5432"
+    volumes:
+      - /citus/market/coor_data:/var/lib/postgresql/data
+      - ./init-sql/init-market.sql:/docker-entrypoint-initdb.d/init-market.sql
+    depends_on:
+      - worker1_market
+      - worker2_market
+  
+  worker1_market:
+    <<: *citus-worker
+    container_name: worker1_market
+    volumes:
+      - /citus/market/worker1_data:/var/lib/postgresql/data
+      
+  worker2_market:
+    <<: *citus-worker
+    container_name: worker2_market
+    volumes:
+      - /citus/market/worker2_data:/var/lib/postgresql/data
