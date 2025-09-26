@@ -342,4 +342,5 @@ volumes:
 
 networks:
   airflow-net:
+    name: airflow-net
     driver: bridge
