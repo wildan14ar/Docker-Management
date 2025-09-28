@@ -24,6 +24,10 @@ services:
     volumes:
       - coor_hc_data:/var/lib/postgresql/data
       - ./init-sql/init-hc.sql:/docker-entrypoint-initdb.d/init-hc.sql
+      - /citus/hc/config/postgresql.conf:/etc/postgresql/postgresql.conf:ro
+      - /citus/hc/logs/coordinator:/var/log/postgresql
+      - /citus/hc/backups/coordinator:/var/backups/postgresql
+      - /citus/hc/scripts:/opt/scripts:ro
     depends_on:
       - worker1-hc
       - worker2-hc
@@ -33,44 +37,64 @@ services:
     container_name: worker1-hc
     volumes:
       - worker1_hc_data:/var/lib/postgresql/data
+      - /citus/hc/config/postgresql.conf:/etc/postgresql/postgresql.conf:ro
+      - /citus/hc/logs/worker1:/var/log/postgresql
+      - /citus/hc/backups/worker1:/var/backups/postgresql
+      - /citus/hc/scripts:/opt/scripts:ro
 
   worker2-hc:
     <<: *citus-worker
     container_name: worker2-hc
     volumes:
       - worker2_hc_data:/var/lib/postgresql/data
+      - /citus/hc/config/postgresql.conf:/etc/postgresql/postgresql.conf:ro
+      - /citus/hc/logs/worker2:/var/log/postgresql
+      - /citus/hc/backups/worker2:/var/backups/postgresql
+      - /citus/hc/scripts:/opt/scripts:ro
 
-  # =====================
-  # SERVICE DOCUMENT
-  # =====================
-  coor-doc:
-    <<: *citus-coor
-    container_name: coor-doc
-    ports:
-      - "5432:5432"
-    volumes:
-      - coor_doc_data:/var/lib/postgresql/data
-      - ./init-sql/init-doc.sql:/docker-entrypoint-initdb.d/init-doc.sql
-    depends_on:
-      - worker1-doc
-      - worker2-doc
+  # # =====================
+  # # SERVICE DOCUMENT
+  # # =====================
+  # coor-doc:
+  #   <<: *citus-coor
+  #   container_name: coor-doc
+  #   ports:
+  #     - "5432:5432"
+  #   volumes:
+  #     - coor_doc_data:/var/lib/postgresql/data
+  #     - ./init-sql/init-doc.sql:/docker-entrypoint-initdb.d/init-doc.sql
+  #     - /citus/document/config/postgresql.conf:/etc/postgresql/postgresql.conf:ro
+  #     - /citus/document/logs/coordinator:/var/log/postgresql
+  #     - /citus/document/backups/coordinator:/var/backups/postgresql
+  #     - /citus/document/scripts:/opt/scripts:ro
+  #   depends_on:
+  #     - worker1-doc
+  #     - worker2-doc
 
-  worker1-doc:
-    <<: *citus-worker
-    container_name: worker1-doc
-    volumes:
-      - worker1_doc_data:/var/lib/postgresql/data
+  # worker1-doc:
+  #   <<: *citus-worker
+  #   container_name: worker1-doc
+  #   volumes:
+  #     - worker1_doc_data:/var/lib/postgresql/data
+  #     - /citus/document/config/postgresql.conf:/etc/postgresql/postgresql.conf:ro
+  #     - /citus/document/logs/worker1:/var/log/postgresql
+  #     - /citus/document/backups/worker1:/var/backups/postgresql
+  #     - /citus/document/scripts:/opt/scripts:ro
 
-  worker2-doc:
-    <<: *citus-worker
-    container_name: worker2-doc
-    volumes:
-      - worker2_doc_data:/var/lib/postgresql/data
+  # worker2-doc:
+  #   <<: *citus-worker
+  #   container_name: worker2-doc
+  #   volumes:
+  #     - worker2_doc_data:/var/lib/postgresql/data
+  #     - /citus/document/config/postgresql.conf:/etc/postgresql/postgresql.conf:ro
+  #     - /citus/document/logs/worker2:/var/log/postgresql
+  #     - /citus/document/backups/worker2:/var/backups/postgresql
+  #     - /citus/document/scripts:/opt/scripts:ro
 
 volumes:
   coor_hc_data:
   worker1_hc_data:
   worker2_hc_data:
-  coor_doc_data:
-  worker1_doc_data:
-  worker2_doc_data:
+  # coor_doc_data:
+  # worker1_doc_data:
+  # worker2_doc_data:
