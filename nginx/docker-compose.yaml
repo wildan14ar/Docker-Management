@@ -1,25 +1,18 @@
-version: "3.8"
-
 services:
   nginx:
-    container_name: nginx-reverse-proxy_net
     image: nginx:latest
+    container_name: nginx-reverse-proxy
     ports:
-      - "5432:80"
+      - "80:80"
+      - "443:443"
     volumes:
       - ./log/:/var/log/nginx/
-      - ./nginx.conf:/etc/nginx/nginx.conf
-      - ./my.conf:/etc/nginx/conf.d/my.conf
+      - ./config/nginx.conf:/etc/nginx/nginx.conf
+      - ./config/my.conf:/etc/nginx/conf.d/my.conf
+      - ./certs:/etc/nginx/certs:ro
     networks:
-      - proxy_net
-    restart: always
-    depends_on:
-      - hc_db
-      - risk_db
-      - document_db
-      - finance_db
-      - market_competition_db
+      - nginx_net
 
 networks:
-  proxy_net:
-    external: true
+  nginx_net:
+    driver: bridge
