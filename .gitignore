@@ -2,3 +2,8 @@ certs/
 .env
 logs/
 data/
+dags/
+logs/
+plugins/
+config/
+services/
