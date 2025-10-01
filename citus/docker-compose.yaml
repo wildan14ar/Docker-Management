@@ -13,9 +13,31 @@ x-citus-worker: &citus-worker
   restart: unless-stopped
 
 services:
-  # =====================
-  # SERVICE DEV
-  # =====================
+  # # =====================
+  # # SERVICE PGPOOL
+  # # ====================
+  # pgpool:
+  #   image: bitnami/pgpool:latest
+  #   container_name: pgpool
+  #   environment:
+  #     - PGPOOL_BACKEND_NODES=coor-hc:5432
+  #     - PGPOOL_SR_CHECK_USER=${POSTGRES_USER:-postgres}
+  #     - PGPOOL_SR_CHECK_PASSWORD=${POSTGRES_PASSWORD:-ppgpass}
+  #     - PGPOOL_ENABLE_LOAD_BALANCING=true
+  #     - PGPOOL_PORT=5432
+  #     - POSTGRES_USER=${POSTGRES_USER:-postgres}
+  #     - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-ppgpass}
+  #   ports:
+  #     - "6432:5432"
+  #   depends_on:
+  #     - coor-hc
+  #   networks:
+  #     - nginx_net
+  #   restart: unless-stopped
+
+  # # =====================
+  # # SERVICE DEV
+  # # =====================
   # coor-dev:
   #   <<: *citus-coor
   #   container_name: coor-dev
@@ -31,7 +53,7 @@ services:
   #   depends_on:
   #     - worker1-dev
   #     - worker2-dev
-  # 
+  #
   # worker1-dev:
   #   <<: *citus-worker
   #   container_name: worker1-dev
@@ -41,7 +63,7 @@ services:
   #     - /citus/dev/logs/worker1:/var/log/postgresql
   #     - /citus/dev/backups/worker1:/var/backups/postgresql
   #     - /citus/dev/scripts:/opt/scripts:ro
-  # 
+  #
   # worker2-dev:
   #   <<: *citus-worker
   #   container_name: worker2-dev
@@ -109,7 +131,7 @@ services:
   #   depends_on:
   #     - worker1-doc
   #     - worker2-doc
-
+  #
   # worker1-doc:
   #   <<: *citus-worker
   #   container_name: worker1-doc
@@ -119,7 +141,7 @@ services:
   #     - /citus/document/logs/worker1:/var/log/postgresql
   #     - /citus/document/backups/worker1:/var/backups/postgresql
   #     - /citus/document/scripts:/opt/scripts:ro
-
+  #
   # worker2-doc:
   #   <<: *citus-worker
   #   container_name: worker2-doc
@@ -131,6 +153,9 @@ services:
   #     - /citus/document/scripts:/opt/scripts:ro
 
 volumes:
+  # coor_dev_data:
+  # worker1_dev_data:
+  # worker2_dev_data:
   coor_hc_data:
   worker1_hc_data:
   worker2_hc_data:
