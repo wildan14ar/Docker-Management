@@ -74,6 +74,7 @@ x-airflow-common:
     AIRFLOW_CONFIG: '/opt/airflow/config/airflow.cfg'
   volumes:
     - ${AIRFLOW_PROJ_DIR:-.}/dags:/opt/airflow/dags
+    - ${AIRFLOW_PROJ_DIR:-.}/jars:/opt/airflow/dags/jars
     - ${AIRFLOW_PROJ_DIR:-.}/logs:/opt/airflow/logs
     - ${AIRFLOW_PROJ_DIR:-.}/config:/opt/airflow/config
     - ${AIRFLOW_PROJ_DIR:-.}/plugins:/opt/airflow/plugins
@@ -336,6 +337,54 @@ services:
       <<: *airflow-common-depends-on
       airflow-init:
         condition: service_completed_successfully
+
+  spark-master:
+    container_name: spark-master
+    image: bitnami/spark:latest
+    environment:
+      - SPARK_MODE=master
+      - SPARK_RPC_AUTHENTICATION_ENABLED=no
+      - SPARK_RPC_ENCRYPTION_ENABLED=no
+      - SPARK_LOCAL_STORAGE_ENCRYPTION_ENABLED=no
+      - SPARK_SSL_ENABLED=no
+      - SPARK_USER=root
+      - PYSPARK_PYTHON=/opt/bitnami/python/bin/python3
+    volumes:
+      - ./jars:/opt/bitnami/spark/jars-ext
+      - ./dags/services:/opt/airflow/dags/services
+    depends_on:
+      - airflow-worker
+    expose:
+      - 8080
+      - 7077
+      - 6066
+    ports:
+      - 8081:8080 # Spark Master Web UI
+      - 7077:7077 # Spark Master Port
+      - 6066:6066 # Spark Master REST Port
+    networks:
+      - airflow-net
+
+  spark-worker:
+    image: bitnami/spark:latest
+    environment:
+      - SPARK_MODE=worker
+      - SPARK_MASTER_URL=spark://spark-master:7077
+      - SPARK_WORKER_MEMORY=1G
+      - SPARK_WORKER_CORES=1
+      - SPARK_RPC_AUTHENTICATION_ENABLED=no
+      - SPARK_RPC_ENCRYPTION_ENABLED=no
+      - SPARK_LOCAL_STORAGE_ENCRYPTION_ENABLED=no
+      - SPARK_SSL_ENABLED=no
+      - SPARK_USER=root
+      - PYSPARK_PYTHON=/opt/bitnami/python/bin/python3
+    volumes:
+      - ./jars:/opt/bitnami/spark/jars-ext
+      - ./dags/services:/opt/airflow/dags/services
+    depends_on:
+      - spark-master
+    networks:
+      - airflow-net
 
 volumes:
   postgres-db-volume:

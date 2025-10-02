@@ -35,44 +35,44 @@ services:
   #     - nginx_net
   #   restart: unless-stopped
 
-  # # =====================
-  # # SERVICE DEV
-  # # =====================
-  # coor-dev:
-  #   <<: *citus-coor
-  #   container_name: coor-dev
-  #   ports:
-  #     - "5432:5432"
-  #   volumes:
-  #     - coor_dev_data:/var/lib/postgresql/data
-  #     - ./init-sql/init-dev.sql:/docker-entrypoint-initdb.d/init-dev.sql
-  #     - /citus/dev/config/postgresql.conf:/etc/postgresql/postgresql.conf:ro
-  #     - /citus/dev/logs/coordinator:/var/log/postgresql
-  #     - /citus/dev/backups/coordinator:/var/backups/postgresql
-  #     - /citus/dev/scripts:/opt/scripts:ro
-  #   depends_on:
-  #     - worker1-dev
-  #     - worker2-dev
-  #
-  # worker1-dev:
-  #   <<: *citus-worker
-  #   container_name: worker1-dev
-  #   volumes:
-  #     - worker1_dev_data:/var/lib/postgresql/data
-  #     - /citus/dev/config/postgresql.conf:/etc/postgresql/postgresql.conf
-  #     - /citus/dev/logs/worker1:/var/log/postgresql
-  #     - /citus/dev/backups/worker1:/var/backups/postgresql
-  #     - /citus/dev/scripts:/opt/scripts:ro
-  #
-  # worker2-dev:
-  #   <<: *citus-worker
-  #   container_name: worker2-dev
-  #   volumes:
-  #     - worker2_dev_data:/var/lib/postgresql/data
-  #     - /citus/dev/config/postgresql.conf:/etc/postgresql/postgresql.conf
-  #     - /citus/dev/logs/worker2:/var/log/postgresql
-  #     - /citus/dev/backups/worker2:/var/backups/postgresql
-  #     - /citus/dev/scripts:/opt/scripts:ro
+  # =====================
+  # SERVICE DEV
+  # =====================
+  coor-dev:
+    <<: *citus-coor
+    container_name: coor-dev
+    ports:
+      - "5432:5432"
+    volumes:
+      - coor_dev_data:/var/lib/postgresql/data
+      - ./init-sql/init-dev.sql:/docker-entrypoint-initdb.d/init-dev.sql
+      - /citus/dev/config/postgresql.conf:/etc/postgresql/postgresql.conf:ro
+      - /citus/dev/logs/coordinator:/var/log/postgresql
+      - /citus/dev/backups/coordinator:/var/backups/postgresql
+      - /citus/dev/scripts:/opt/scripts:ro
+    depends_on:
+      - worker1-dev
+      - worker2-dev
+  
+  worker1-dev:
+    <<: *citus-worker
+    container_name: worker1-dev
+    volumes:
+      - worker1_dev_data:/var/lib/postgresql/data
+      - /citus/dev/config/postgresql.conf:/etc/postgresql/postgresql.conf
+      - /citus/dev/logs/worker1:/var/log/postgresql
+      - /citus/dev/backups/worker1:/var/backups/postgresql
+      - /citus/dev/scripts:/opt/scripts:ro
+  
+  worker2-dev:
+    <<: *citus-worker
+    container_name: worker2-dev
+    volumes:
+      - worker2_dev_data:/var/lib/postgresql/data
+      - /citus/dev/config/postgresql.conf:/etc/postgresql/postgresql.conf
+      - /citus/dev/logs/worker2:/var/log/postgresql
+      - /citus/dev/backups/worker2:/var/backups/postgresql
+      - /citus/dev/scripts:/opt/scripts:ro
 
   # =====================
   # SERVICE HC
@@ -153,9 +153,9 @@ services:
   #     - /citus/document/scripts:/opt/scripts:ro
 
 volumes:
-  # coor_dev_data:
-  # worker1_dev_data:
-  # worker2_dev_data:
+  coor_dev_data:
+  worker1_dev_data:
+  worker2_dev_data:
   coor_hc_data:
   worker1_hc_data:
   worker2_hc_data:
