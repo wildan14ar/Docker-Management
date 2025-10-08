@@ -1,17 +1,18 @@
-# Base image
+# Base image Airflow
 FROM apache/airflow:3.0.6
 
 # Copy requirements.txt
 COPY ./dags/requirements.txt /requirements.txt
 
+# Switch to root user to install dependencies
 USER root
 
 # Install system dependencies + Java + wget for Spark client
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
-        build-essential \
-        openjdk-17-jdk \
-        wget \
+    build-essential \
+    openjdk-17-jdk \
+    wget \
     && apt-get autoremove -yqq --purge \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
@@ -33,4 +34,5 @@ USER airflow
 # Install Python packages
 RUN pip install --no-cache-dir -r /requirements.txt
 
+# Set working directory
 WORKDIR /opt/airflow

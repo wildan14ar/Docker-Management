@@ -1,7 +1,7 @@
 services:
   nginx:
     image: nginx:latest
-    container_name: nginx-reverse-proxy
+    container_name: nginx-server
     ports:
       - "80:80"
       - "443:443"
