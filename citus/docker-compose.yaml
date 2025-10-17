@@ -2,81 +2,35 @@ x-citus-coor: &citus-coor
   image: citusdata/citus:latest
   environment:
     - POSTGRES_USER=${POSTGRES_USER:-postgres}
-    - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-ppgpass}
+    - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-pgpass}
+  volumes:
+    - ./init-sql/init.sql:/docker-entrypoint-initdb.d/init.sql
   restart: unless-stopped
 
 x-citus-worker: &citus-worker
   image: citusdata/citus:latest
   environment:
     - POSTGRES_USER=${POSTGRES_USER:-postgres}
-    - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-ppgpass}
+    - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-pgpass}
   restart: unless-stopped
 
 services:
-  # # =====================
-  # # SERVICE PGPOOL
-  # # ====================
-  # pgpool:
-  #   image: bitnami/pgpool:latest
-  #   container_name: pgpool
-  #   environment:
-  #     - PGPOOL_BACKEND_NODES=coor-hc:5432
-  #     - PGPOOL_SR_CHECK_USER=${POSTGRES_USER:-postgres}
-  #     - PGPOOL_SR_CHECK_PASSWORD=${POSTGRES_PASSWORD:-ppgpass}
-  #     - PGPOOL_ENABLE_LOAD_BALANCING=true
-  #     - PGPOOL_PORT=5432
-  #     - POSTGRES_USER=${POSTGRES_USER:-postgres}
-  #     - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-ppgpass}
-  #   ports:
-  #     - "6432:5432"
-  #   depends_on:
-  #     - coor-hc
-  #   networks:
-  #     - nginx_net
-  #   restart: unless-stopped
-
-  # =====================
-  # SERVICE DEV
-  # =====================
-  coor-dev:
-    <<: *citus-coor
-    container_name: coor-dev
+  pgbouncer:
+    image: edoburu/pgbouncer:latest
+    container_name: pgbouncer
     ports:
-      - "5432:5432"
+      - "6432:6432"
     volumes:
-      - coor_dev_data:/var/lib/postgresql/data
-      - ./init-sql/init-dev.sql:/docker-entrypoint-initdb.d/init-dev.sql
-      - /citus/dev/config/postgresql.conf:/etc/postgresql/postgresql.conf:ro
-      - /citus/dev/logs/coordinator:/var/log/postgresql
-      - /citus/dev/backups/coordinator:/var/backups/postgresql
-      - /citus/dev/scripts:/opt/scripts:ro
+      - ./pgbouncer/pgbouncer.ini:/etc/pgbouncer/pgbouncer.ini:ro
+      - ./pgbouncer/userlist.txt:/etc/pgbouncer/userlist.txt:ro
     depends_on:
-      - worker1-dev
-      - worker2-dev
-  
-  worker1-dev:
-    <<: *citus-worker
-    container_name: worker1-dev
-    volumes:
-      - worker1_dev_data:/var/lib/postgresql/data
-      - /citus/dev/config/postgresql.conf:/etc/postgresql/postgresql.conf
-      - /citus/dev/logs/worker1:/var/log/postgresql
-      - /citus/dev/backups/worker1:/var/backups/postgresql
-      - /citus/dev/scripts:/opt/scripts:ro
-  
-  worker2-dev:
-    <<: *citus-worker
-    container_name: worker2-dev
-    volumes:
-      - worker2_dev_data:/var/lib/postgresql/data
-      - /citus/dev/config/postgresql.conf:/etc/postgresql/postgresql.conf
-      - /citus/dev/logs/worker2:/var/log/postgresql
-      - /citus/dev/backups/worker2:/var/backups/postgresql
-      - /citus/dev/scripts:/opt/scripts:ro
+      - coor-hc
+      - coor-doc
+      - coor-fin
+      - coor-risk
+      - coor-market
+    restart: always
 
-  # =====================
-  # SERVICE HC
-  # =====================
   coor-hc:
     <<: *citus-coor
     container_name: coor-hc
@@ -84,81 +38,162 @@ services:
       - "5431:5432"
     volumes:
       - coor_hc_data:/var/lib/postgresql/data
-      - ./init-sql/init-hc.sql:/docker-entrypoint-initdb.d/init-hc.sql
       - /citus/hc/config/postgresql.conf:/etc/postgresql/postgresql.conf:ro
       - /citus/hc/logs/coordinator:/var/log/postgresql
       - /citus/hc/backups/coordinator:/var/backups/postgresql
       - /citus/hc/scripts:/opt/scripts:ro
-    depends_on:
-      - worker1-hc
-      - worker2-hc
 
-  worker1-hc:
-    <<: *citus-worker
-    container_name: worker1-hc
+  coor-doc:
+    <<: *citus-coor
+    container_name: coor-doc
+    ports:
+      - "5432:5432"
     volumes:
-      - worker1_hc_data:/var/lib/postgresql/data
-      - /citus/hc/config/postgresql.conf:/etc/postgresql/postgresql.conf:ro
-      - /citus/hc/logs/worker1:/var/log/postgresql
-      - /citus/hc/backups/worker1:/var/backups/postgresql
-      - /citus/hc/scripts:/opt/scripts:ro
+      - coor_doc_data:/var/lib/postgresql/data
+      - /citus/document/config/postgresql.conf:/etc/postgresql/postgresql.conf:ro
+      - /citus/document/logs/coordinator:/var/log/postgresql
+      - /citus/document/backups/coordinator:/var/backups/postgresql
+      - /citus/document/scripts:/opt/scripts:ro
 
-  worker2-hc:
-    <<: *citus-worker
-    container_name: worker2-hc
+  coor-fin:
+    <<: *citus-coor
+    container_name: coor-fin
+    ports:
+      - "5433:5432"
     volumes:
-      - worker2_hc_data:/var/lib/postgresql/data
-      - /citus/hc/config/postgresql.conf:/etc/postgresql/postgresql.conf:ro
-      - /citus/hc/logs/worker2:/var/log/postgresql
-      - /citus/hc/backups/worker2:/var/backups/postgresql
-      - /citus/hc/scripts:/opt/scripts:ro
+      - coor_fin_data:/var/lib/postgresql/data
+      - /citus/finance/config/postgresql.conf:/etc/postgresql/postgresql.conf:ro
+      - /citus/finance/logs/coordinator:/var/log/postgresql
+      - /citus/finance/backups/coordinator:/var/backups/postgresql
+      - /citus/finance/scripts:/opt/scripts:ro
 
-  # # =====================
-  # # SERVICE DOCUMENT
-  # # =====================
-  # coor-doc:
-  #   <<: *citus-coor
-  #   container_name: coor-doc
-  #   ports:
-  #     - "5432:5432"
-  #   volumes:
-  #     - coor_doc_data:/var/lib/postgresql/data
-  #     - ./init-sql/init-doc.sql:/docker-entrypoint-initdb.d/init-doc.sql
-  #     - /citus/document/config/postgresql.conf:/etc/postgresql/postgresql.conf:ro
-  #     - /citus/document/logs/coordinator:/var/log/postgresql
-  #     - /citus/document/backups/coordinator:/var/backups/postgresql
-  #     - /citus/document/scripts:/opt/scripts:ro
-  #   depends_on:
-  #     - worker1-doc
-  #     - worker2-doc
-  #
-  # worker1-doc:
-  #   <<: *citus-worker
-  #   container_name: worker1-doc
-  #   volumes:
-  #     - worker1_doc_data:/var/lib/postgresql/data
-  #     - /citus/document/config/postgresql.conf:/etc/postgresql/postgresql.conf:ro
-  #     - /citus/document/logs/worker1:/var/log/postgresql
-  #     - /citus/document/backups/worker1:/var/backups/postgresql
-  #     - /citus/document/scripts:/opt/scripts:ro
-  #
-  # worker2-doc:
-  #   <<: *citus-worker
-  #   container_name: worker2-doc
-  #   volumes:
-  #     - worker2_doc_data:/var/lib/postgresql/data
-  #     - /citus/document/config/postgresql.conf:/etc/postgresql/postgresql.conf:ro
-  #     - /citus/document/logs/worker2:/var/log/postgresql
-  #     - /citus/document/backups/worker2:/var/backups/postgresql
-  #     - /citus/document/scripts:/opt/scripts:ro
+  coor-risk:
+    <<: *citus-coor
+    container_name: coor-risk
+    ports:
+      - "5434:5432"
+    volumes:
+      - coor_risk_data:/var/lib/postgresql/data
+      - /citus/risk/config/postgresql.conf:/etc/postgresql/postgresql.conf:ro
+      - /citus/risk/logs/coordinator:/var/log/postgresql
+      - /citus/risk/backups/coordinator:/var/backups/postgresql
+      - /citus/risk/scripts:/opt/scripts:ro
+
+  coor-market:
+    <<: *citus-coor
+    container_name: coor-market
+    ports:
+      - "5435:5432"
+    volumes:
+      - coor_market_data:/var/lib/postgresql/data
+      - /citus/market/config/postgresql.conf:/etc/postgresql/postgresql.conf:ro
+      - /citus/market/logs/coordinator:/var/log/postgresql
+      - /citus/market/backups/coordinator:/var/backups/postgresql
+      - /citus/market/scripts:/opt/scripts:ro
+
+  worker-node1:
+    <<: *citus-worker
+    container_name: worker-node1
+    volumes:
+      - worker_node1_data:/var/lib/postgresql/data
+      - /citus/worker/logs/worker1:/var/log/postgresql
+      - /citus/worker/backups/worker1:/var/backups/postgresql
+      - /citus/worker/scripts:/opt/scripts:ro
+
+  worker-node2:
+    <<: *citus-worker
+    container_name: worker-node2
+    volumes:
+      - worker_node2_data:/var/lib/postgresql/data
+      - /citus/worker/logs/worker2:/var/log/postgresql
+      - /citus/worker/backups/worker2:/var/backups/postgresql
+      - /citus/worker/scripts:/opt/scripts:ro
+
+  worker-node3:
+    <<: *citus-worker
+    container_name: worker-node3
+    volumes:
+      - worker_node3_data:/var/lib/postgresql/data
+      - /citus/worker/logs/worker3:/var/log/postgresql
+      - /citus/worker/backups/worker3:/var/backups/postgresql
+      - /citus/worker/scripts:/opt/scripts:ro
+
+  worker-node4:
+    <<: *citus-worker
+    container_name: worker-node4
+    volumes:
+      - worker_node4_data:/var/lib/postgresql/data
+      - /citus/worker/logs/worker4:/var/log/postgresql
+      - /citus/worker/backups/worker4:/var/backups/postgresql
+      - /citus/worker/scripts:/opt/scripts:ro
+
+  worker-node5:
+    <<: *citus-worker
+    container_name: worker-node5
+    volumes:
+      - worker_node5_data:/var/lib/postgresql/data
+      - /citus/worker/logs/worker5:/var/log/postgresql
+      - /citus/worker/backups/worker5:/var/backups/postgresql
+      - /citus/worker/scripts:/opt/scripts:ro
+
+  worker-node6:
+    <<: *citus-worker
+    container_name: worker-node6
+    volumes:
+      - worker_node6_data:/var/lib/postgresql/data
+      - /citus/worker/logs/worker6:/var/log/postgresql
+      - /citus/worker/backups/worker6:/var/backups/postgresql
+      - /citus/worker/scripts:/opt/scripts:ro
+
+  worker-node7:
+    <<: *citus-worker
+    container_name: worker-node7
+    volumes:
+      - worker_node7_data:/var/lib/postgresql/data
+      - /citus/worker/logs/worker7:/var/log/postgresql
+      - /citus/worker/backups/worker7:/var/backups/postgresql
+      - /citus/worker/scripts:/opt/scripts:ro
+
+  worker-node8:
+    <<: *citus-worker
+    container_name: worker-node8
+    volumes:
+      - worker_node8_data:/var/lib/postgresql/data
+      - /citus/worker/logs/worker8:/var/log/postgresql
+      - /citus/worker/backups/worker8:/var/backups/postgresql
+      - /citus/worker/scripts:/opt/scripts:ro
+
+  worker-node9:
+    <<: *citus-worker
+    container_name: worker-node9
+    volumes:
+      - worker_node9_data:/var/lib/postgresql/data
+      - /citus/worker/logs/worker9:/var/log/postgresql
+      - /citus/worker/backups/worker9:/var/backups/postgresql
+      - /citus/worker/scripts:/opt/scripts:ro
+
+  worker-node10:
+    <<: *citus-worker
+    container_name: worker-node10
+    volumes:
+      - worker_node10_data:/var/lib/postgresql/data
+      - /citus/worker/logs/worker10:/var/log/postgresql
+      - /citus/worker/backups/worker10:/var/backups/postgresql
+      - /citus/worker/scripts:/opt/scripts:ro
 
 volumes:
-  coor_dev_data:
-  worker1_dev_data:
-  worker2_dev_data:
   coor_hc_data:
-  worker1_hc_data:
-  worker2_hc_data:
-  # coor_doc_data:
-  # worker1_doc_data:
-  # worker2_doc_data:
+  coor_doc_data:
+  coor_fin_data:
+  coor_risk_data:
+  coor_market_data:
+  worker_node1_data:
+  worker_node2_data:
+  worker_node3_data:
+  worker_node4_data:
+  worker_node5_data:
+  worker_node6_data:
+  worker_node7_data:
+  worker_node8_data:
+  worker_node9_data:
+  worker_node10_data:
